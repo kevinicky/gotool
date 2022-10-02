@@ -1,4 +1,4 @@
-module github.com/kevinicky/goutil
+module github.com/kevinicky/gotool
 
 go 1.18
 

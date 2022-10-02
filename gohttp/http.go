@@ -21,7 +21,7 @@ type HTTPUtil interface {
 
 type httputil struct{}
 
-func NewHttp() HTTPUtil {
+func NewHttpTool() HTTPUtil {
 	return &httputil{}
 }
 

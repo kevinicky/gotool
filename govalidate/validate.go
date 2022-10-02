@@ -8,7 +8,7 @@ type ValidatorUtil interface {
 
 type validatorUtil struct{}
 
-func NewValidate() ValidatorUtil {
+func NewValidateTool() ValidatorUtil {
 	return &validatorUtil{}
 }
 
