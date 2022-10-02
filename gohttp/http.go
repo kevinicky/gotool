@@ -12,20 +12,20 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-type HTTPUtil interface {
+type HttpTools interface {
 	JsonResponse(w http.ResponseWriter, message interface{}, httpStatusCode int)
 	JsonValidatorError(w http.ResponseWriter, err error)
 	Request(ctx context.Context, url string, method string, payload interface{}) ([]byte, int, error)
 	GetPagination(r *http.Request) (int, int)
 }
 
-type httputil struct{}
+type httpTools struct{}
 
-func NewHttpTool() HTTPUtil {
-	return &httputil{}
+func NewHttpTools() HttpTools {
+	return &httpTools{}
 }
 
-func (h *httputil) JsonResponse(w http.ResponseWriter, message interface{}, httpStatusCode int) {
+func (h *httpTools) JsonResponse(w http.ResponseWriter, message interface{}, httpStatusCode int) {
 	jsonResp, _ := json.Marshal(message)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -33,7 +33,7 @@ func (h *httputil) JsonResponse(w http.ResponseWriter, message interface{}, http
 	_, _ = w.Write(jsonResp)
 }
 
-func (h *httputil) JsonValidatorError(w http.ResponseWriter, err error) {
+func (h *httpTools) JsonValidatorError(w http.ResponseWriter, err error) {
 	message := map[string]interface{}{}
 	if castedObject, ok := err.(validator.ValidationErrors); ok {
 		err := castedObject[0]
@@ -49,7 +49,7 @@ func (h *httputil) JsonValidatorError(w http.ResponseWriter, err error) {
 	}
 }
 
-func (h *httputil) Request(ctx context.Context, url string, method string, payload interface{}) ([]byte, int, error) {
+func (h *httpTools) Request(ctx context.Context, url string, method string, payload interface{}) ([]byte, int, error) {
 	client := &http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
@@ -87,7 +87,7 @@ func (h *httputil) Request(ctx context.Context, url string, method string, paylo
 	return buf.Bytes(), httpStatusCode, nil
 }
 
-func (h *httputil) GetPagination(r *http.Request) (int, int) {
+func (h *httpTools) GetPagination(r *http.Request) (int, int) {
 	isWebsite := true
 	offset := 0
 

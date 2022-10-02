@@ -2,17 +2,17 @@ package govalidate
 
 import "github.com/go-playground/validator/v10"
 
-type ValidatorUtil interface {
+type ValidateTools interface {
 	CustomValidator() (validate *validator.Validate)
 }
 
-type validatorUtil struct{}
+type validateTools struct{}
 
-func NewValidateTool() ValidatorUtil {
-	return &validatorUtil{}
+func NewValidateTools() ValidateTools {
+	return &validateTools{}
 }
 
-func (v *validatorUtil) CustomValidator() (validate *validator.Validate) {
+func (v *validateTools) CustomValidator() (validate *validator.Validate) {
 	validate = validator.New()
 
 	_ = validate.RegisterValidation("android", func(fl validator.FieldLevel) bool {
