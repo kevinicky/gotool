@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/go-playground/validator/v10"
 	"io"
 	"net/http"
@@ -17,6 +18,7 @@ type HttpTools interface {
 	JsonValidatorError(w http.ResponseWriter, err error)
 	Request(ctx context.Context, url string, method string, payload interface{}) ([]byte, int, error)
 	GetPagination(r *http.Request) (int, int)
+	CheckJsonHeader(request *http.Request) (err error)
 }
 
 type httpTools struct{}
@@ -115,4 +117,16 @@ func (h *httpTools) GetPagination(r *http.Request) (int, int) {
 	}
 
 	return limit, offset
+}
+
+func (h *httpTools) CheckJsonHeader(request *http.Request) (err error) {
+	headerContentType := request.Header.Get("Content-Type")
+
+	if headerContentType != "application/json" {
+		err = errors.New("invalid header content-type")
+
+		return
+	}
+
+	return
 }
