@@ -45,6 +45,8 @@ func (h *httpTools) JsonValidatorError(w http.ResponseWriter, err error) {
 			message = map[string]interface{}{"message": err.Field() + " is required"}
 		case "android|ios":
 			message = map[string]interface{}{"message": err.Field() + " must android, ios"}
+		case "email":
+			message = map[string]interface{}{"message": err.Field() + " is not valid email format"}
 		}
 
 		h.JsonResponse(w, message, http.StatusBadRequest)
