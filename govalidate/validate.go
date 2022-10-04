@@ -23,5 +23,21 @@ func (v *validateTools) CustomValidator() (validate *validator.Validate) {
 		return fl.Field().String() == "ios"
 	})
 
+	_ = validate.RegisterValidation("OVO", func(fl validator.FieldLevel) bool {
+		return fl.Field().String() == "OVO"
+	})
+
+	_ = validate.RegisterValidation("DANA", func(fl validator.FieldLevel) bool {
+		return fl.Field().String() == "DANA"
+	})
+
+	_ = validate.RegisterValidation("LINKAJA", func(fl validator.FieldLevel) bool {
+		return fl.Field().String() == "LINKAJA"
+	})
+
+	_ = validate.RegisterValidation("SHOPEEPAY", func(fl validator.FieldLevel) bool {
+		return fl.Field().String() == "SHOPEEPAY"
+	})
+
 	return
 }
