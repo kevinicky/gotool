@@ -17,7 +17,7 @@ type HttpTools interface {
 	JsonResponse(w http.ResponseWriter, message interface{}, httpStatusCode int)
 	JsonValidatorError(w http.ResponseWriter, err error)
 	Request(ctx context.Context, url string, method string, payload interface{}) ([]byte, int, error)
-	GetPagination(r *http.Request) (int, int)
+	GetPagination(r *http.Request) (int, int, bool)
 	CheckJsonHeader(request *http.Request) (err error)
 }
 
@@ -99,15 +99,14 @@ func (h *httpTools) Request(ctx context.Context, url string, method string, payl
 	return buf.Bytes(), httpStatusCode, nil
 }
 
-func (h *httpTools) GetPagination(r *http.Request) (int, int) {
-	isWebsite := true
+func (h *httpTools) GetPagination(r *http.Request) (int, int, bool) {
+	isPage := true
 	offset := 0
 
-	page, err := strconv.Atoi(r.URL.Query().Get("page"))
+	_, err := strconv.Atoi(r.URL.Query().Get("page"))
 
 	if err != nil {
-		isWebsite = false
-		page = 1
+		isPage = false
 	}
 
 	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
@@ -116,8 +115,8 @@ func (h *httpTools) GetPagination(r *http.Request) (int, int) {
 		limit = 10
 	}
 
-	if isWebsite {
-		offset = (page - 1) * limit
+	if isPage {
+		offset = 0
 	} else {
 		offset, err = strconv.Atoi(r.URL.Query().Get("offset"))
 
@@ -126,7 +125,7 @@ func (h *httpTools) GetPagination(r *http.Request) (int, int) {
 		}
 	}
 
-	return limit, offset
+	return limit, offset, isPage
 }
 
 func (h *httpTools) CheckJsonHeader(request *http.Request) (err error) {
