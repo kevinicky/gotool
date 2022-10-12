@@ -5,5 +5,7 @@ const (
 	UsernameHasTaken    = "username has taken"
 	PhoneNumberHasTaken = "phone number has taken"
 
-	FeedNotFound 		= "feed not found"
+	FeedNotFound = "feed not found"
+
+	DataNotFound = "data not found"
 )
