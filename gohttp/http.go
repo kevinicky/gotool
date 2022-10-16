@@ -42,19 +42,19 @@ func (h *httpTools) JsonValidatorError(w http.ResponseWriter, err error) {
 
 		switch errObj.Tag() {
 		case "required":
-			message = map[string]interface{}{"message": errObj.Field() + " is required"}
+			message = map[string]interface{}{"error": errObj.Field() + " is required"}
 		case "android|ios":
-			message = map[string]interface{}{"message": errObj.Field() + " must android, ios"}
+			message = map[string]interface{}{"error": errObj.Field() + " must android, ios"}
 		case "DANA|LINKAJA|OVO|SHOPEEPAY":
-			message = map[string]interface{}{"message": errObj.Field() + " must DANA, LINKAJA, OVO, or SHOPEEPAY"}
+			message = map[string]interface{}{"error": errObj.Field() + " must DANA, LINKAJA, OVO, or SHOPEEPAY"}
 		case "email":
-			message = map[string]interface{}{"message": errObj.Field() + " is not valid email format"}
+			message = map[string]interface{}{"error": errObj.Field() + " is not valid email format"}
 		case "gte":
-			message = map[string]interface{}{"message": errObj.Field() + " value must be greater equal than " + errObj.Param()}
+			message = map[string]interface{}{"error": errObj.Field() + " value must be greater equal than " + errObj.Param()}
 		case "gt":
-			message = map[string]interface{}{"message": errObj.Field() + " value must be greater than " + errObj.Param()}
+			message = map[string]interface{}{"error": errObj.Field() + " value must be greater than " + errObj.Param()}
 		default:
-			message = map[string]interface{}{"message": "invalid input for " + errObj.Field()}
+			message = map[string]interface{}{"error": "invalid input for " + errObj.Field()}
 		}
 
 		h.JsonResponse(w, message, http.StatusBadRequest)
