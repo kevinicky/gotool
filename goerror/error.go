@@ -1,11 +1,13 @@
 package goerror
 
-const (
-	UserNotFound        = "user not found"
-	UsernameHasTaken    = "username has taken"
-	PhoneNumberHasTaken = "phone number has taken"
+import "errors"
 
-	FeedNotFound = "feed not found"
+var (
+	UserNotFound        = errors.New("user not found")
+	UsernameHasTaken    = errors.New("username has taken")
+	PhoneNumberHasTaken = errors.New("phone number has taken")
 
-	DataNotFound = "data not found"
+	FeedNotFound = errors.New("feed not found")
+
+	DataNotFound = errors.New("data not found")
 )
