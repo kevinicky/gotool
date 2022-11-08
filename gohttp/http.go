@@ -103,7 +103,7 @@ func (h *httpTools) GetPagination(r *http.Request) (int, int, bool) {
 	isPage := true
 	offset := 0
 
-	_, err := strconv.Atoi(r.URL.Query().Get("page"))
+	page, err := strconv.Atoi(r.URL.Query().Get("page"))
 
 	if err != nil {
 		isPage = false
@@ -116,7 +116,7 @@ func (h *httpTools) GetPagination(r *http.Request) (int, int, bool) {
 	}
 
 	if isPage {
-		offset = 0
+		offset = (page - 1) * limit
 	} else {
 		offset, err = strconv.Atoi(r.URL.Query().Get("offset"))
 
