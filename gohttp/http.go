@@ -14,11 +14,11 @@ import (
 )
 
 type HttpTools interface {
-	JsonResponse(w http.ResponseWriter, message interface{}, httpStatusCode int)
-	JsonValidatorError(w http.ResponseWriter, err error)
-	Request(ctx context.Context, url string, method string, payload interface{}) ([]byte, int, error)
-	GetPagination(r *http.Request) (int, int, bool)
-	CheckJsonHeader(request *http.Request) (err error)
+	JsonResponse(writer http.ResponseWriter, payload interface{}, httpStatusCode int)
+	JsonValidatorError(writer http.ResponseWriter, error error)
+	Request(context context.Context, url string, method string, payload interface{}) ([]byte, int, error)
+	GetPagination(request *http.Request) (int, int, bool)
+	CheckJsonHeader(request *http.Request) error
 }
 
 type ResponseCORSOptions struct {
@@ -27,30 +27,37 @@ type ResponseCORSOptions struct {
 	AllowHeader  string `default:"*"`
 }
 
-type httpTools struct {
-	responseCORSOptions ResponseCORSOptions
+type PaginationOptions struct {
+	DefaultLimit  int `default:"10"`
+	DefaultOffset int `default:"0"`
 }
 
-func NewHttpTools(responseCORSOptions ResponseCORSOptions) HttpTools {
+type httpTools struct {
+	responseCORSOptions ResponseCORSOptions
+	paginationOptions   PaginationOptions
+}
+
+func NewHttpTools(responseCORSOptions ResponseCORSOptions, paginationOptions PaginationOptions) HttpTools {
 	return &httpTools{
 		responseCORSOptions,
+		paginationOptions,
 	}
 }
 
-func (h *httpTools) JsonResponse(w http.ResponseWriter, message interface{}, httpStatusCode int) {
-	jsonResp, _ := json.Marshal(message)
+func (httpTools *httpTools) JsonResponse(writer http.ResponseWriter, payload interface{}, httpStatusCode int) {
+	jsonResp, _ := json.Marshal(payload)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", h.responseCORSOptions.AllowOrigin)
-	w.Header().Set("Access-Control-Allow-Methods", h.responseCORSOptions.AllowMethods)
-	w.Header().Set("Access-Control-Allow-Headers", h.responseCORSOptions.AllowHeader)
-	w.WriteHeader(httpStatusCode)
-	_, _ = w.Write(jsonResp)
+	writer.Header().Set("Content-Type", "application/json")
+	writer.Header().Set("Access-Control-Allow-Origin", httpTools.responseCORSOptions.AllowOrigin)
+	writer.Header().Set("Access-Control-Allow-Methods", httpTools.responseCORSOptions.AllowMethods)
+	writer.Header().Set("Access-Control-Allow-Headers", httpTools.responseCORSOptions.AllowHeader)
+	writer.WriteHeader(httpStatusCode)
+	_, _ = writer.Write(jsonResp)
 }
 
-func (h *httpTools) JsonValidatorError(w http.ResponseWriter, err error) {
+func (httpTools *httpTools) JsonValidatorError(writer http.ResponseWriter, error error) {
 	message := map[string]interface{}{}
-	if castedObject, ok := err.(validator.ValidationErrors); ok {
+	if castedObject, ok := error.(validator.ValidationErrors); ok {
 		errObj := castedObject[0]
 
 		switch errObj.Tag() {
@@ -70,11 +77,11 @@ func (h *httpTools) JsonValidatorError(w http.ResponseWriter, err error) {
 			message = map[string]interface{}{"error": "invalid input for " + errObj.Field()}
 		}
 
-		h.JsonResponse(w, message, http.StatusBadRequest)
+		httpTools.JsonResponse(writer, message, http.StatusBadRequest)
 	}
 }
 
-func (h *httpTools) Request(ctx context.Context, url string, method string, payload interface{}) ([]byte, int, error) {
+func (httpTools *httpTools) Request(context context.Context, url string, method string, payload interface{}) ([]byte, int, error) {
 	client := &http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}
@@ -82,10 +89,10 @@ func (h *httpTools) Request(ctx context.Context, url string, method string, payl
 	var err error
 
 	if payload == nil {
-		req, err = http.NewRequestWithContext(ctx, method, url, nil)
+		req, err = http.NewRequestWithContext(context, method, url, nil)
 	} else {
 		jsonData, _ := json.Marshal(payload)
-		req, err = http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(jsonData))
+		req, err = http.NewRequestWithContext(context, method, url, bytes.NewBuffer(jsonData))
 	}
 
 	if err != nil {
@@ -112,43 +119,40 @@ func (h *httpTools) Request(ctx context.Context, url string, method string, payl
 	return buf.Bytes(), httpStatusCode, nil
 }
 
-func (h *httpTools) GetPagination(r *http.Request) (int, int, bool) {
+func (httpTools *httpTools) GetPagination(request *http.Request) (int, int, bool) {
 	isPage := true
 	offset := 0
 
-	page, err := strconv.Atoi(r.URL.Query().Get("page"))
-
+	page, err := strconv.Atoi(request.URL.Query().Get("page"))
 	if err != nil {
 		isPage = false
 	}
 
-	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
-
+	limit, err := strconv.Atoi(request.URL.Query().Get("limit"))
 	if err != nil {
-		limit = 10
+		limit = httpTools.paginationOptions.DefaultLimit
 	}
 
 	if isPage {
 		offset = (page - 1) * limit
 	} else {
-		offset, err = strconv.Atoi(r.URL.Query().Get("offset"))
-
+		offset, err = strconv.Atoi(request.URL.Query().Get("offset"))
 		if err != nil {
-			offset = 0
+			offset = httpTools.paginationOptions.DefaultOffset
 		}
 	}
 
 	return limit, offset, isPage
 }
 
-func (h *httpTools) CheckJsonHeader(request *http.Request) (err error) {
+func (httpTools *httpTools) CheckJsonHeader(request *http.Request) error {
 	headerContentType := request.Header.Get("Content-Type")
 
 	if headerContentType != "application/json" {
-		err = errors.New("invalid header content-type")
+		err := errors.New("invalid header content-type")
 
-		return
+		return err
 	}
 
-	return
+	return nil
 }
