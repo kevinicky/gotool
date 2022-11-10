@@ -6,20 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/go-playground/validator/v10"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"io"
 	"net/http"
-	"strconv"
-
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"reflect"
 )
-
-type HttpTools interface {
-	JsonResponse(writer http.ResponseWriter, payload interface{}, httpStatusCode int)
-	JsonValidatorError(writer http.ResponseWriter, error error)
-	Request(context context.Context, url string, method string, payload interface{}) ([]byte, int, error)
-	GetPagination(request *http.Request) (int, int, bool)
-	CheckJsonHeader(request *http.Request) error
-}
 
 type ResponseCORSOptions struct {
 	AllowOrigin  string `default:"*"`
@@ -27,21 +18,25 @@ type ResponseCORSOptions struct {
 	AllowHeader  string `default:"*"`
 }
 
-type PaginationOptions struct {
-	DefaultLimit  int `default:"10"`
-	DefaultOffset int `default:"0"`
-}
+func defaultCORSOptions(options ResponseCORSOptions) ResponseCORSOptions {
+	typ := reflect.TypeOf(options)
 
-type httpTools struct {
-	responseCORSOptions ResponseCORSOptions
-	paginationOptions   PaginationOptions
-}
-
-func NewHttpTools(responseCORSOptions ResponseCORSOptions, paginationOptions PaginationOptions) HttpTools {
-	return &httpTools{
-		responseCORSOptions,
-		paginationOptions,
+	if options.AllowOrigin == "" {
+		f, _ := typ.FieldByName("AllowOrigin")
+		options.AllowOrigin = f.Tag.Get("default")
 	}
+
+	if options.AllowMethods == "" {
+		f, _ := typ.FieldByName("AllowMethods")
+		options.AllowMethods = f.Tag.Get("default")
+	}
+
+	if options.AllowHeader == "" {
+		f, _ := typ.FieldByName("AllowHeader")
+		options.AllowHeader = f.Tag.Get("default")
+	}
+
+	return options
 }
 
 func (httpTools *httpTools) JsonResponse(writer http.ResponseWriter, payload interface{}, httpStatusCode int) {
@@ -117,32 +112,6 @@ func (httpTools *httpTools) Request(context context.Context, url string, method 
 	}
 
 	return buf.Bytes(), httpStatusCode, nil
-}
-
-func (httpTools *httpTools) GetPagination(request *http.Request) (int, int, bool) {
-	isPage := true
-	offset := 0
-
-	page, err := strconv.Atoi(request.URL.Query().Get("page"))
-	if err != nil {
-		isPage = false
-	}
-
-	limit, err := strconv.Atoi(request.URL.Query().Get("limit"))
-	if err != nil {
-		limit = httpTools.paginationOptions.DefaultLimit
-	}
-
-	if isPage {
-		offset = (page - 1) * limit
-	} else {
-		offset, err = strconv.Atoi(request.URL.Query().Get("offset"))
-		if err != nil {
-			offset = httpTools.paginationOptions.DefaultOffset
-		}
-	}
-
-	return limit, offset, isPage
 }
 
 func (httpTools *httpTools) CheckJsonHeader(request *http.Request) error {
