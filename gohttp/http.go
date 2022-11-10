@@ -21,16 +21,29 @@ type HttpTools interface {
 	CheckJsonHeader(request *http.Request) (err error)
 }
 
-type httpTools struct{}
+type ResponseCORSOptions struct {
+	AllowOrigin  string `default:"*"`
+	AllowMethods string `default:"*"`
+	AllowHeader  string `default:"*"`
+}
 
-func NewHttpTools() HttpTools {
-	return &httpTools{}
+type httpTools struct {
+	responseCORSOptions ResponseCORSOptions
+}
+
+func NewHttpTools(responseCORSOptions ResponseCORSOptions) HttpTools {
+	return &httpTools{
+		responseCORSOptions,
+	}
 }
 
 func (h *httpTools) JsonResponse(w http.ResponseWriter, message interface{}, httpStatusCode int) {
 	jsonResp, _ := json.Marshal(message)
 
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", h.responseCORSOptions.AllowOrigin)
+	w.Header().Set("Access-Control-Allow-Methods", h.responseCORSOptions.AllowMethods)
+	w.Header().Set("Access-Control-Allow-Headers", h.responseCORSOptions.AllowHeader)
 	w.WriteHeader(httpStatusCode)
 	_, _ = w.Write(jsonResp)
 }
