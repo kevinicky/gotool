@@ -68,6 +68,10 @@ func (httpTools *httpTools) JsonValidatorError(writer http.ResponseWriter, error
 			message = map[string]interface{}{"error": errObj.Field() + " value must be greater equal than " + errObj.Param()}
 		case "gt":
 			message = map[string]interface{}{"error": errObj.Field() + " value must be greater than " + errObj.Param()}
+		case "lte":
+			message = map[string]interface{}{"error": errObj.Field() + " value must be less equal than " + errObj.Param()}
+		case "lt":
+			message = map[string]interface{}{"error": errObj.Field() + " value must be less than " + errObj.Param()}
 		default:
 			message = map[string]interface{}{"error": "invalid input for " + errObj.Field()}
 		}
