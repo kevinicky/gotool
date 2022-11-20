@@ -2,6 +2,7 @@ package gohttp
 
 import (
 	"context"
+	"github.com/kevinicky/gotool/govalidate"
 	"net/http"
 )
 
@@ -16,11 +17,13 @@ type HttpTools interface {
 type httpTools struct {
 	responseCORSOptions ResponseCORSOptions
 	paginationOptions   PaginationOptions
+	validateTools       govalidate.ValidateTools
 }
 
 func NewHttpTools(responseCORSOptions ResponseCORSOptions, paginationOptions PaginationOptions) HttpTools {
 	return &httpTools{
 		defaultCORSOptions(responseCORSOptions),
 		defaultPaginationOptions(paginationOptions),
+		govalidate.NewValidateTools(),
 	}
 }

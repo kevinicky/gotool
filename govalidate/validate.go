@@ -4,6 +4,7 @@ import "github.com/go-playground/validator/v10"
 
 type ValidateTools interface {
 	CustomValidator() (validate *validator.Validate)
+	CustomValidationError(error error) map[string]interface{}
 }
 
 type validateTools struct{}
@@ -40,4 +41,34 @@ func (v *validateTools) CustomValidator() (validate *validator.Validate) {
 	})
 
 	return
+}
+
+func (v *validateTools) CustomValidationError(error error) map[string]interface{} {
+	message := map[string]interface{}{}
+	if castedObject, ok := error.(validator.ValidationErrors); ok {
+		errObj := castedObject[0]
+
+		switch errObj.Tag() {
+		case "required":
+			message = map[string]interface{}{"error": errObj.Field() + " is required"}
+		case "android|ios":
+			message = map[string]interface{}{"error": errObj.Field() + " must android, ios"}
+		case "DANA|LINKAJA|OVO|SHOPEEPAY":
+			message = map[string]interface{}{"error": errObj.Field() + " must DANA, LINKAJA, OVO, or SHOPEEPAY"}
+		case "email":
+			message = map[string]interface{}{"error": errObj.Field() + " is not valid email format"}
+		case "gte":
+			message = map[string]interface{}{"error": errObj.Field() + " value must be greater equal than " + errObj.Param()}
+		case "gt":
+			message = map[string]interface{}{"error": errObj.Field() + " value must be greater than " + errObj.Param()}
+		case "lte":
+			message = map[string]interface{}{"error": errObj.Field() + " value must be less equal than " + errObj.Param()}
+		case "lt":
+			message = map[string]interface{}{"error": errObj.Field() + " value must be less than " + errObj.Param()}
+		default:
+			message = map[string]interface{}{"error": "invalid input for " + errObj.Field()}
+		}
+	}
+
+	return message
 }

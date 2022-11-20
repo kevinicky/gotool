@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/go-playground/validator/v10"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"io"
 	"net/http"
@@ -51,33 +50,8 @@ func (httpTools *httpTools) JsonResponse(writer http.ResponseWriter, payload int
 }
 
 func (httpTools *httpTools) JsonValidatorError(writer http.ResponseWriter, error error) {
-	message := map[string]interface{}{}
-	if castedObject, ok := error.(validator.ValidationErrors); ok {
-		errObj := castedObject[0]
-
-		switch errObj.Tag() {
-		case "required":
-			message = map[string]interface{}{"error": errObj.Field() + " is required"}
-		case "android|ios":
-			message = map[string]interface{}{"error": errObj.Field() + " must android, ios"}
-		case "DANA|LINKAJA|OVO|SHOPEEPAY":
-			message = map[string]interface{}{"error": errObj.Field() + " must DANA, LINKAJA, OVO, or SHOPEEPAY"}
-		case "email":
-			message = map[string]interface{}{"error": errObj.Field() + " is not valid email format"}
-		case "gte":
-			message = map[string]interface{}{"error": errObj.Field() + " value must be greater equal than " + errObj.Param()}
-		case "gt":
-			message = map[string]interface{}{"error": errObj.Field() + " value must be greater than " + errObj.Param()}
-		case "lte":
-			message = map[string]interface{}{"error": errObj.Field() + " value must be less equal than " + errObj.Param()}
-		case "lt":
-			message = map[string]interface{}{"error": errObj.Field() + " value must be less than " + errObj.Param()}
-		default:
-			message = map[string]interface{}{"error": "invalid input for " + errObj.Field()}
-		}
-
-		httpTools.JsonResponse(writer, message, http.StatusBadRequest)
-	}
+	message := httpTools.validateTools.CustomValidationError(error)
+	httpTools.JsonResponse(writer, message, http.StatusBadRequest)
 }
 
 func (httpTools *httpTools) Request(context context.Context, url string, method string, payload interface{}) ([]byte, int, error) {
