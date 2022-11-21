@@ -21,7 +21,7 @@ func defaultPaginationOptions(options PaginationOptions) PaginationOptions {
 	if options.DefaultLimit == 0 {
 		f, _ := typ.FieldByName("DefaultLimit")
 		value, _ := strconv.Atoi(f.Tag.Get("default"))
-		options.DefaultOffset = value
+		options.DefaultLimit = value
 	}
 
 	return options
