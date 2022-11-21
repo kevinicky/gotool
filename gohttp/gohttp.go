@@ -20,6 +20,9 @@ type httpTools struct {
 	validateTools       govalidate.ValidateTools
 }
 
+// NewHttpTools create object for accessing http tool function
+//
+// Return http tool interface for accessing function
 func NewHttpTools(responseCORSOptions ResponseCORSOptions, paginationOptions PaginationOptions) HttpTools {
 	return &httpTools{
 		defaultCORSOptions(responseCORSOptions),

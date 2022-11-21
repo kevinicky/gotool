@@ -9,10 +9,16 @@ type ValidateTools interface {
 
 type validateTools struct{}
 
+// NewValidateTools create object for accessing validation tool function
+//
+// Return validate tool interface for accessing function
 func NewValidateTools() ValidateTools {
 	return &validateTools{}
 }
 
+// CustomValidator registers custom tag for validator/v10
+//
+// Return validate object
 func (v *validateTools) CustomValidator() (validate *validator.Validate) {
 	validate = validator.New()
 
@@ -43,6 +49,10 @@ func (v *validateTools) CustomValidator() (validate *validator.Validate) {
 	return
 }
 
+// CustomValidationError validates error from struct tag that earlier
+// registered.
+//
+// Return message error
 func (v *validateTools) CustomValidationError(error error) map[string]interface{} {
 	message := map[string]interface{}{}
 	if castedObject, ok := error.(validator.ValidationErrors); ok {

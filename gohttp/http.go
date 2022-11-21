@@ -38,6 +38,13 @@ func defaultCORSOptions(options ResponseCORSOptions) ResponseCORSOptions {
 	return options
 }
 
+// JsonResponse write http response header, json body message, and http status
+// code to HTTP.ResponseWriter.
+// Response header attributes are:
+// Content-Type					=> always application/json
+// Access-Control-Allow-Origin	=> from responseCORSOptions
+// Access-Control-Allow-Methods	=> from responseCORSOptions
+// Access-Control-Allow-Headers	=> from responseCORSOptions
 func (httpTools *httpTools) JsonResponse(writer http.ResponseWriter, payload interface{}, httpStatusCode int) {
 	jsonResp, _ := json.Marshal(payload)
 
@@ -49,11 +56,17 @@ func (httpTools *httpTools) JsonResponse(writer http.ResponseWriter, payload int
 	_, _ = writer.Write(jsonResp)
 }
 
+// JsonValidatorError validate error from validator/v10 and write it to
+// JsonResponse.
 func (httpTools *httpTools) JsonValidatorError(writer http.ResponseWriter, error error) {
 	message := httpTools.validateTools.CustomValidationError(error)
 	httpTools.JsonResponse(writer, message, http.StatusBadRequest)
 }
 
+// Request creates http request with open telemetry in http.Client attribute.
+//
+// Returns response on bytes, status code, and error if there are issue while
+// creating http request (not error because of payload such as 4xx).
 func (httpTools *httpTools) Request(context context.Context, url string, method string, payload interface{}) ([]byte, int, error) {
 	client := &http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
@@ -92,6 +105,9 @@ func (httpTools *httpTools) Request(context context.Context, url string, method 
 	return buf.Bytes(), httpStatusCode, nil
 }
 
+// CheckJsonHeader validate header from http request that must application/json
+//
+// Return error if http request header is not json
 func (httpTools *httpTools) CheckJsonHeader(request *http.Request) error {
 	headerContentType := request.Header.Get("Content-Type")
 

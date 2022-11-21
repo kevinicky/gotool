@@ -11,6 +11,8 @@ type PaginationOptions struct {
 	DefaultOffset int `default:"0"`
 }
 
+// defaultPaginationOptions create default value for pagination of limit or
+// offset is not setting by user.
 func defaultPaginationOptions(options PaginationOptions) PaginationOptions {
 	typ := reflect.TypeOf(options)
 	if options.DefaultOffset == 0 {
@@ -27,6 +29,10 @@ func defaultPaginationOptions(options PaginationOptions) PaginationOptions {
 	return options
 }
 
+// GetPagination calculate limit, offset and mark if the request is contains
+// query page.
+//
+// Returns limit, offset, and is page flag.
 func (httpTools *httpTools) GetPagination(request *http.Request) (int, int, bool) {
 	isPage := true
 	offset := 0
