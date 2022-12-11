@@ -63,11 +63,51 @@ func (httpTools *httpTools) JsonValidatorError(writer http.ResponseWriter, error
 	httpTools.JsonResponse(writer, message, http.StatusBadRequest)
 }
 
-// Request creates http request with open telemetry in http.Client attribute.
+// Request creates simple http request.
 //
 // Returns response on bytes, status code, and error if there are issue while
 // creating http request (not error because of payload such as 4xx).
-func (httpTools *httpTools) Request(context context.Context, url string, method string, payload interface{}) ([]byte, int, error) {
+func (httpTools *httpTools) Request(url string, method string, payload interface{}) ([]byte, int, error) {
+	client := &http.Client{}
+	req := &http.Request{}
+	var err error
+
+	if payload == nil {
+		req, err = http.NewRequest(method, url, nil)
+	} else {
+		jsonData, _ := json.Marshal(payload)
+		req, err = http.NewRequest(method, url, bytes.NewBuffer(jsonData))
+	}
+
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	httpStatusCode := resp.StatusCode
+
+	buf := new(bytes.Buffer)
+	if _, err = io.Copy(buf, resp.Body); err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
+
+	return buf.Bytes(), httpStatusCode, nil
+}
+
+// RequestWithContext creates http request with open telemetry in http.Client attribute.
+//
+// Returns response on bytes, status code, and error if there are issue while
+// creating http request (not error because of payload such as 4xx).
+func (httpTools *httpTools) RequestWithContext(context context.Context, url string, method string, payload interface{}) ([]byte, int, error) {
 	client := &http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}

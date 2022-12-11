@@ -9,7 +9,8 @@ import (
 type HttpTools interface {
 	JsonResponse(writer http.ResponseWriter, payload interface{}, httpStatusCode int)
 	JsonValidatorError(writer http.ResponseWriter, error error)
-	Request(context context.Context, url string, method string, payload interface{}) ([]byte, int, error)
+	RequestWithContext(context context.Context, url string, method string, payload interface{}) ([]byte, int, error)
+	Request(url string, method string, payload interface{}) ([]byte, int, error)
 	GetPagination(request *http.Request) (int, int, bool)
 	CheckJsonHeader(request *http.Request) error
 }
